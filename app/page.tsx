@@ -1,5 +1,6 @@
 "use client";
 
+import { PushToggle } from "@/components/PushToggle";
 import { useState } from "react";
 import { AskButton } from "@/components/AskButton";
 import { AnalysisCard } from "@/components/AnalysisCard";
@@ -51,9 +52,13 @@ export default function Home() {
         </section>
 
         {/* Секция 3: Статус часов */}
+        {/* Секция 3: Статус часов */}
         <section>
           <h2 className="text-lg font-semibold mb-3">Часы ребёнка</h2>
-          <DeviceStatus status={status} loading={statusLoading} />
+          <div className="space-y-3">
+            <DeviceStatus status={status} loading={statusLoading} />
+            <PushToggle />
+          </div>
         </section>
       </div>
 
