@@ -41,15 +41,19 @@ export async function fetchAlerts(): Promise<Alert[]> {
 }
 
 // Запрос "Что у ребёнка?"
-export async function askWhatsHappening(): Promise<AskResponse> {
+export async function askWhatsHappening(lang: string = "ru"): Promise<AskResponse> {
   const deviceId = getDeviceId();
-  return http<AskResponse>(`/api/parent/device/${deviceId}/ask`, {
-    method: "POST",
-    // Бэк ожидает form-data, но question необязателен — шлём пустое тело
-    body: "",
-    headers: {}, // переопределяем дефолтные application/json
-  });
+  // Передаём язык через query-параметр
+  return http<AskResponse>(
+    `/api/parent/device/${deviceId}/ask?lang=${lang}`,
+    {
+      method: "POST",
+      body: "",
+      headers: {},
+    }
+  );
 }
+
 
 // Подписка на push
 export async function subscribePush(

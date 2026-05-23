@@ -6,7 +6,7 @@ import { useI18n } from "@/lib/i18n-context";
 import type { AnalysisResult } from "@/lib/types";
 
 export function useAsk() {
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
   const [data, setData] = useState<AnalysisResult | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ export function useAsk() {
     setLoading(true);
     setError(null);
     try {
-      const result = await askWhatsHappening();
+      const result = await askWhatsHappening(lang);
       setData(result.analysis);
       setAudioUrl(result.audio_url);
     } catch (e) {
