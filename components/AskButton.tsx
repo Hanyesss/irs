@@ -1,6 +1,7 @@
 "use client";
 
 import { Mic, Loader2 } from "lucide-react";
+import { useI18n } from "@/lib/i18n-context";
 
 interface Props {
   childName: string;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function AskButton({ childName, loading, onClick }: Props) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col items-center py-6">
       <button
@@ -27,12 +29,12 @@ export function AskButton({ childName, loading, onClick }: Props) {
         {loading ? (
           <>
             <Loader2 className="w-10 h-10 animate-spin" />
-            <span>Слушаю...</span>
+            <span>{t("listening")}</span>
           </>
         ) : (
           <>
             <Mic className="w-10 h-10" />
-            <span>Послушать</span>
+            <span>{t("listenButton")}</span>
           </>
         )}
       </button>

@@ -3,6 +3,7 @@
 import type { Alert } from "@/lib/types";
 import { AlertCard } from "./AlertCard";
 import { RefreshCw } from "lucide-react";
+import { useI18n } from "@/lib/i18n-context";
 
 interface Props {
   alerts: Alert[];
@@ -12,10 +13,9 @@ interface Props {
 }
 
 export function AlertsList({ alerts, loading, onAlertClick, onRefresh }: Props) {
-  // Защита от undefined во время ревалидации SWR
+  const { t } = useI18n();
   const safeAlerts = Array.isArray(alerts) ? alerts : [];
 
-  // Состояние загрузки (первый раз)
   if (loading && safeAlerts.length === 0) {
     return (
       <div className="space-y-3">
@@ -29,14 +29,13 @@ export function AlertsList({ alerts, loading, onAlertClick, onRefresh }: Props) 
     );
   }
 
-  // Пусто
   if (safeAlerts.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed bg-card p-8 text-center">
         <div className="text-4xl mb-2">😊</div>
-        <div className="font-medium mb-1">Пока тихо</div>
+        <div className="font-medium mb-1">{t("emptyEvents")}</div>
         <div className="text-sm text-muted-foreground">
-          Тревог не было. Это хорошо.
+          {t("emptyEventsHint")}
         </div>
       </div>
     );
@@ -50,7 +49,7 @@ export function AlertsList({ alerts, loading, onAlertClick, onRefresh }: Props) 
           className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
         >
           <RefreshCw className="w-3 h-3" />
-          Обновить
+          {t("refresh")}
         </button>
       </div>
       {safeAlerts.map((alert) => (

@@ -7,19 +7,21 @@ import { DeviceStatus } from "@/components/DeviceStatus";
 import { AlertsList } from "@/components/AlertsList";
 import { AlertDetailDialog } from "@/components/AlertDetailDialog";
 import { PushToggle } from "@/components/PushToggle";
+import { LangSwitcher } from "@/components/LangSwitcher";
 import { useAsk } from "@/hooks/useAsk";
 import { useDeviceStatus } from "@/hooks/useDeviceStatus";
 import { useAlerts } from "@/hooks/useAlerts";
+import { useI18n } from "@/lib/i18n-context";
 import type { Alert } from "@/lib/types";
 
 export default function Home() {
+  const { t } = useI18n();
   const { data: analysis, audioUrl, loading: askLoading, error: askError, ask } = useAsk();
   const { status, loading: statusLoading } = useDeviceStatus();
   const { alerts, loading: alertsLoading, refresh } = useAlerts();
 
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
 
-  // Открываем модалку, если пришли по ссылке из push (?alert=evt_xxx)
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -30,13 +32,18 @@ export default function Home() {
     }
   }, [alerts]);
 
-  const childName = status?.child_name ?? "Ребёнок";
+  const childName = status?.child_name ?? t("defaultChildName");
 
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-md mx-auto px-4 py-6 space-y-8">
+        {/* Шапка с переключателем языков */}
+        <div className="flex justify-end">
+          <LangSwitcher />
+        </div>
+
         <section>
-          <h1 className="text-2xl font-bold mb-2">Что у ребёнка?</h1>
+          <h1 className="text-2xl font-bold mb-2">{t("title")}</h1>
           <AskButton childName={childName} loading={askLoading} onClick={ask} />
           {askError && (
             <div className="text-sm text-red-600 text-center mt-2">
@@ -53,7 +60,7 @@ export default function Home() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold mb-3">Последние события</h2>
+          <h2 className="text-lg font-semibold mb-3">{t("sectionEvents")}</h2>
           <AlertsList
             alerts={alerts}
             loading={alertsLoading}
@@ -63,7 +70,7 @@ export default function Home() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold mb-3">Часы ребёнка</h2>
+          <h2 className="text-lg font-semibold mb-3">{t("sectionWatch")}</h2>
           <div className="space-y-3">
             <DeviceStatus status={status} loading={statusLoading} />
             <PushToggle />

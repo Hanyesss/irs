@@ -1,9 +1,10 @@
 "use client";
 
 import type { Alert } from "@/lib/types";
-import { ANXIETY_STYLES, getSourceIcon, getSourceLabel } from "@/lib/anxiety";
+import { ANXIETY_STYLES, getSourceIcon } from "@/lib/anxiety";
 import { formatRelativeTime } from "@/lib/format";
 import { useMounted } from "@/hooks/useMounted";
+import { useI18n } from "@/lib/i18n-context";
 import { Play } from "lucide-react";
 
 interface Props {
@@ -11,11 +12,18 @@ interface Props {
   onClick: () => void;
 }
 
+function getSourceLabelKey(eventType: string): "sourceWatch" | "sourceParent" | "sourceSos" {
+  if (eventType === "sos_button") return "sourceSos";
+  if (eventType === "parent_request") return "sourceParent";
+  return "sourceWatch";
+}
+
 export function AlertCard({ alert, onClick }: Props) {
+  const { t } = useI18n();
   const mounted = useMounted();
   const style = ANXIETY_STYLES[alert.alert_level];
   const icon = getSourceIcon(alert.type);
-  const label = getSourceLabel(alert.type);
+  const label = t(getSourceLabelKey(alert.type));
 
   return (
     <button
@@ -40,13 +48,12 @@ export function AlertCard({ alert, onClick }: Props) {
 
       <div className="flex items-center justify-between">
         <div className="text-xs">
-          Уровень:{" "}
-          <span className="font-semibold">{alert.alert_level}/5</span>
+          {t("level")}: <span className="font-semibold">{alert.alert_level}/5</span>
         </div>
         {alert.audio_url && (
           <div className="flex items-center gap-1 text-xs text-blue-600">
             <Play className="w-3 h-3" />
-            <span>Послушать</span>
+            <span>{t("listenRecording")}</span>
           </div>
         )}
       </div>

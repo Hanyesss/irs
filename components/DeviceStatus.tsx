@@ -4,6 +4,7 @@ import { Battery, Signal, MapPin, WifiOff } from "lucide-react";
 import type { DeviceStatus as DeviceStatusType } from "@/lib/types";
 import { formatAgo } from "@/lib/format";
 import { useMounted } from "@/hooks/useMounted";
+import { useI18n } from "@/lib/i18n-context";
 
 interface Props {
   status: DeviceStatusType | null;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function DeviceStatus({ status, loading }: Props) {
+  const { t } = useI18n();
   const mounted = useMounted();
 
   if (loading || !status) {
@@ -38,17 +40,16 @@ export function DeviceStatus({ status, loading }: Props) {
           ) : (
             <WifiOff className="w-4 h-4 text-red-500" />
           )}
-          <span>{status.online ? status.signal : "оффлайн"}</span>
+          <span>{status.online ? status.signal : t("offline")}</span>
         </div>
         <div className="flex items-center gap-1">
           <MapPin className="w-4 h-4" />
-          <span>{status.gps_fix ? "GPS ✓" : "GPS —"}</span>
+          <span>{status.gps_fix ? t("gpsOk") : t("gpsMissing")}</span>
         </div>
       </div>
       <div className="text-base font-semibold">{status.child_name}</div>
       <div className="text-xs text-muted-foreground mt-1">
-        Последняя активность:{" "}
-        {mounted && status.last_seen ? formatAgo(status.last_seen) : "..."}
+        {t("lastActivity")}: {mounted && status.last_seen ? formatAgo(status.last_seen) : "..."}
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+export const maxDuration = 60; // секунд (макс на Hobby плане)
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://213.173.108.156:17087";

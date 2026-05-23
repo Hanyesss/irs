@@ -9,14 +9,15 @@ import {
   checkSubscription,
   getNotificationPermission,
 } from "@/lib/push";
+import { useI18n } from "@/lib/i18n-context";
 
 export function PushToggle() {
+  const { t } = useI18n();
   const [enabled, setEnabled] = useState(false);
   const [supported, setSupported] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // При монтировании проверяем текущее состояние
   useEffect(() => {
     if (!isPushSupported()) {
       setSupported(false);
@@ -28,7 +29,6 @@ export function PushToggle() {
   async function handleToggle() {
     setError(null);
     setLoading(true);
-
     try {
       if (enabled) {
         await unsubscribeFromPush();
@@ -38,7 +38,7 @@ export function PushToggle() {
         setEnabled(true);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Что-то пошло не так");
+      setError(e instanceof Error ? e.message : "Error");
     } finally {
       setLoading(false);
     }
@@ -49,7 +49,7 @@ export function PushToggle() {
       <div className="rounded-2xl border bg-card p-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <BellOff className="w-4 h-4" />
-          <span>Уведомления не поддерживаются этим браузером</span>
+          <span>{t("pushNotSupported")}</span>
         </div>
       </div>
     );
@@ -64,11 +64,9 @@ export function PushToggle() {
         <div className="flex items-center gap-3">
           <Bell className={`w-5 h-5 ${enabled ? "text-blue-500" : "text-muted-foreground"}`} />
           <div>
-            <div className="font-medium text-sm">Push-уведомления</div>
+            <div className="font-medium text-sm">{t("pushTitle")}</div>
             <div className="text-xs text-muted-foreground">
-              {enabled
-                ? "Включены — будем сообщать о тревогах"
-                : "Выключены"}
+              {enabled ? t("pushOn") : t("pushOff")}
             </div>
           </div>
         </div>
@@ -94,7 +92,7 @@ export function PushToggle() {
 
       {denied && (
         <div className="mt-3 text-xs text-red-600">
-          Уведомления заблокированы в настройках браузера. Разрешите их вручную.
+          {t("pushDenied")}
         </div>
       )}
 
