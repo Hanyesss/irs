@@ -1,4 +1,4 @@
-import type { AnxietyLevel, AlertSource } from "./types";
+import type { AlertLevel } from "./types";
 
 type AnxietyStyle = {
   border: string;
@@ -7,7 +7,13 @@ type AnxietyStyle = {
   label: string;
 };
 
-export const ANXIETY_STYLES: { [key in AnxietyLevel]: AnxietyStyle } = {
+export const ANXIETY_STYLES: { [key in AlertLevel]: AnxietyStyle } = {
+  0: {
+    border: "border-gray-400",
+    bg: "bg-gray-50",
+    text: "text-gray-700",
+    label: "Ребёнка не слышно",
+  },
   1: {
     border: "border-green-500",
     bg: "bg-green-50",
@@ -40,14 +46,15 @@ export const ANXIETY_STYLES: { [key in AnxietyLevel]: AnxietyStyle } = {
   },
 };
 
-export const SOURCE_ICONS: { [key in AlertSource]: string } = {
-  watch: "⚠️",
-  parent: "🎤",
-  sos: "🆘",
-};
+// На бэке event_type — строка, мапим на иконку
+export function getSourceIcon(eventType: string): string {
+  if (eventType === "sos_button") return "🆘";
+  if (eventType === "parent_request") return "🎤";
+  return "⚠️"; // auto_cry_detected и всё остальное
+}
 
-export const SOURCE_LABELS: { [key in AlertSource]: string } = {
-  watch: "Тревога",
-  parent: "Запрос",
-  sos: "SOS",
-};
+export function getSourceLabel(eventType: string): string {
+  if (eventType === "sos_button") return "SOS";
+  if (eventType === "parent_request") return "Запрос";
+  return "Тревога";
+}

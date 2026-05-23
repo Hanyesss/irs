@@ -1,8 +1,9 @@
 "use client";
 
 import type { Alert } from "@/lib/types";
-import { ANXIETY_STYLES, SOURCE_ICONS, SOURCE_LABELS } from "@/lib/anxiety";
+import { ANXIETY_STYLES, getSourceIcon, getSourceLabel } from "@/lib/anxiety";
 import { formatRelativeTime } from "@/lib/format";
+import { useMounted } from "@/hooks/useMounted";
 import { Play } from "lucide-react";
 
 interface Props {
@@ -11,9 +12,10 @@ interface Props {
 }
 
 export function AlertCard({ alert, onClick }: Props) {
-  const style = ANXIETY_STYLES[alert.anxiety_level];
-  const icon = SOURCE_ICONS[alert.source];
-  const label = SOURCE_LABELS[alert.source];
+  const mounted = useMounted();
+  const style = ANXIETY_STYLES[alert.alert_level];
+  const icon = getSourceIcon(alert.type);
+  const label = getSourceLabel(alert.type);
 
   return (
     <button
@@ -30,7 +32,7 @@ export function AlertCard({ alert, onClick }: Props) {
           <span className={style.text}>{label}</span>
         </div>
         <div className="text-xs text-muted-foreground">
-          {formatRelativeTime(alert.timestamp)}
+          {mounted ? formatRelativeTime(alert.timestamp) : ""}
         </div>
       </div>
 
@@ -38,7 +40,8 @@ export function AlertCard({ alert, onClick }: Props) {
 
       <div className="flex items-center justify-between">
         <div className="text-xs">
-          Тревожность: <span className="font-semibold">{alert.anxiety_level}/5</span>
+          Уровень:{" "}
+          <span className="font-semibold">{alert.alert_level}/5</span>
         </div>
         {alert.audio_url && (
           <div className="flex items-center gap-1 text-xs text-blue-600">

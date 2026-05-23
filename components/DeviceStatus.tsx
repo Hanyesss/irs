@@ -1,8 +1,9 @@
 "use client";
 
-import { Battery, Signal, MapPin } from "lucide-react";
+import { Battery, Signal, MapPin, WifiOff } from "lucide-react";
 import type { DeviceStatus as DeviceStatusType } from "@/lib/types";
 import { formatAgo } from "@/lib/format";
+import { useMounted } from "@/hooks/useMounted";
 
 interface Props {
   status: DeviceStatusType | null;
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export function DeviceStatus({ status, loading }: Props) {
+  const mounted = useMounted();
+
   if (loading || !status) {
     return (
       <div className="rounded-2xl border bg-card p-4 animate-pulse">
@@ -19,29 +22,33 @@ export function DeviceStatus({ status, loading }: Props) {
     );
   }
 
-  // Цвет батареи: красный если меньше 20%, иначе обычный
   const batteryColor =
-    status.battery_percent < 20 ? "text-red-500" : "text-foreground";
+    status.battery < 20 ? "text-red-500" : "text-foreground";
 
   return (
     <div className="rounded-2xl border bg-card p-4 shadow-sm">
       <div className="flex items-center justify-between text-sm mb-3">
         <div className={`flex items-center gap-1 ${batteryColor}`}>
           <Battery className="w-4 h-4" />
-          <span className="font-medium">{status.battery_percent}%</span>
+          <span className="font-medium">{status.battery}%</span>
         </div>
         <div className="flex items-center gap-1">
-          <Signal className="w-4 h-4" />
-          <span>{status.signal_type}</span>
+          {status.online ? (
+            <Signal className="w-4 h-4" />
+          ) : (
+            <WifiOff className="w-4 h-4 text-red-500" />
+          )}
+          <span>{status.online ? status.signal : "оффлайн"}</span>
         </div>
         <div className="flex items-center gap-1">
           <MapPin className="w-4 h-4" />
-          <span>{status.gps_ok ? "GPS ✓" : "GPS —"}</span>
+          <span>{status.gps_fix ? "GPS ✓" : "GPS —"}</span>
         </div>
       </div>
       <div className="text-base font-semibold">{status.child_name}</div>
       <div className="text-xs text-muted-foreground mt-1">
-        Последняя активность: {formatAgo(status.last_activity)}
+        Последняя активность:{" "}
+        {mounted && status.last_seen ? formatAgo(status.last_seen) : "..."}
       </div>
     </div>
   );

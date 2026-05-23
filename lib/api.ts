@@ -1,91 +1,68 @@
-import type { Alert, AnalysisResult, DeviceStatus } from "./types";
+import type { Alert, AskResponse, DeviceStatus } from "./types";
+import { getDeviceId } from "./storage";
 
-// Пока используем mock-данные. В Шаге 5 подключим реальный сервер.
-const USE_MOCK = true;
+const PROXY = "/api/proxy";
 
-// Имитация задержки сети
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+async function http<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const res = await fetch(`${PROXY}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
 
-// === Mock-данные ===
-
-const mockAlerts: Alert[] = [
-  {
-    id: "alrt_001",
-    timestamp: new Date(Date.now() - 1000 * 60 * 28).toISOString(),
-    source: "watch",
-    anxiety_level: 4,
-    summary: "Маша плачет, рядом громкие голоса",
-    ai_analysis:
-      "Маша плачет громко, рядом слышен мужской голос на повышенных тонах. Рекомендую связаться с местом нахождения ребёнка.",
-    audio_url: null,
-    location: { lat: 55.751, lng: 37.617, address: "ул. Ленина, 25" },
-  },
-  {
-    id: "alrt_002",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    source: "parent",
-    anxiety_level: 1,
-    summary: "Спокойные голоса, детская речь",
-    ai_analysis: "Ребёнок в безопасности, рядом взрослая женщина.",
-    audio_url: null,
-  },
-  {
-    id: "alrt_003",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    source: "watch",
-    anxiety_level: 2,
-    summary: "Лёгкое беспокойство в голосе ребёнка",
-    ai_analysis: "Маша немного капризничает, но обстановка спокойная.",
-    audio_url: null,
-  },
-];
-
-const mockDeviceStatus: DeviceStatus = {
-  child_name: "Маша",
-  battery_percent: 87,
-  signal: "excellent",
-  signal_type: "4G",
-  gps_ok: true,
-  last_activity: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
-};
-
-// === API-функции ===
-
-export async function fetchAlerts(): Promise<Alert[]> {
-  if (USE_MOCK) {
-    await delay(400);
-    return mockAlerts;
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(
+      `Сервер вернул ошибку ${res.status}: ${text || res.statusText}`
+    );
   }
-  const res = await fetch("/api/parent/alerts");
-  if (!res.ok) throw new Error("Не удалось загрузить тревоги");
+
   return res.json();
 }
 
+// Статус часов
 export async function fetchDeviceStatus(): Promise<DeviceStatus> {
-  if (USE_MOCK) {
-    await delay(300);
-    return mockDeviceStatus;
-  }
-  const res = await fetch("/api/parent/device-status");
-  if (!res.ok) throw new Error("Не удалось получить статус часов");
-  return res.json();
+  const deviceId = getDeviceId();
+  return http<DeviceStatus>(`/api/parent/device/${deviceId}/status`);
 }
 
-export async function askWhatsHappening(): Promise<AnalysisResult> {
-  if (USE_MOCK) {
-    await delay(2500); // имитируем ожидание AI
-    return {
-      id: "anlz_" + Date.now(),
-      timestamp: new Date().toISOString(),
-      sounds: "спокойные голоса, детская речь",
-      voices: "ребёнок и взрослая женщина (вероятно мама или воспитатель)",
-      context: "спокойная обстановка",
-      anxiety_level: 1,
-      conclusion: "ребёнок в безопасности",
-      audio_url: null,
-    };
-  }
-  const res = await fetch("/api/parent/ask", { method: "POST" });
-  if (!res.ok) throw new Error("Часы не отвечают");
-  return res.json();
+// Лента тревог
+export async function fetchAlerts(): Promise<Alert[]> {
+  const deviceId = getDeviceId();
+  const data = await http<{ alerts: Alert[] }>(
+    `/api/parent/device/${deviceId}/alerts?limit=20`
+  );
+  return data.alerts;
+}
+
+// Запрос "Что у ребёнка?"
+export async function askWhatsHappening(): Promise<AskResponse> {
+  const deviceId = getDeviceId();
+  return http<AskResponse>(`/api/parent/device/${deviceId}/ask`, {
+    method: "POST",
+    // Бэк ожидает form-data, но question необязателен — шлём пустое тело
+    body: "",
+    headers: {}, // переопределяем дефолтные application/json
+  });
+}
+
+// Подписка на push
+export async function subscribePush(
+  subscription: PushSubscription
+): Promise<void> {
+  await http("/api/parent/push/subscribe", {
+    method: "POST",
+    body: JSON.stringify({ subscription: subscription.toJSON() }),
+  });
+}
+
+// Публичный URL аудио
+export function getAudioUrl(audioPath: string): string {
+  // audio_url приходит вида "/api/parent/audio/evt_xxx.wav"
+  return `${PROXY}${audioPath}`;
 }

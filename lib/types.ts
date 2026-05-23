@@ -1,59 +1,53 @@
-// Типы данных, с которыми работает приложение.
-// Сервер возвращает данные именно в этой структуре.
+// Уровень тревожности от 0 (ребёнка не слышно) до 5 (срочно)
+export type AlertLevel = 0 | 1 | 2 | 3 | 4 | 5;
 
-/**
- * Уровень тревожности от 1 (всё ок) до 5 (срочно)
- */
-export type AnxietyLevel = 1 | 2 | 3 | 4 | 5;
+// Тип события
+export type EventType =
+  | "auto_cry_detected" // часы сами обнаружили
+  | "parent_request"    // родитель спросил
+  | "sos_button";       // SOS-кнопка
 
-/**
- * Источник события:
- * - watch: часы сами обнаружили (плач, опасные звуки)
- * - parent: родитель сам нажал "Послушать"
- * - sos: ребёнок нажал кнопку SOS на часах
- */
-export type AlertSource = "watch" | "parent" | "sos";
-
-/**
- * Карточка одного события в ленте тревог
- */
+// Карточка одного события в ленте
 export interface Alert {
-  id: string;
-  timestamp: string; // ISO 8601, например "2026-05-18T14:32:00Z"
-  source: AlertSource;
-  anxiety_level: AnxietyLevel;
-  summary: string; // короткое описание ("Маша плачет, рядом громкие голоса")
-  ai_analysis: string; // полный текст анализа AI
-  audio_url: string | null; // URL аудиозаписи (может быть null)
-  location?: {
-    lat: number;
-    lng: number;
-    address: string; // "ул. Ленина, 25"
-  };
-}
-
-/**
- * Ответ на запрос "Что у ребёнка?" — анализ текущей ситуации
- */
-export interface AnalysisResult {
-  id: string;
-  timestamp: string;
-  sounds: string; // "спокойные голоса, детская речь"
-  voices: string; // "ребёнок и взрослая женщина"
-  context: string; // "спокойная обстановка"
-  anxiety_level: AnxietyLevel;
-  conclusion: string; // "ребёнок в безопасности"
+  alert_id: string;
+  type: string;
+  timestamp: string; // ISO 8601
+  alert_level: AlertLevel;
+  summary: string;
+  heard: string | null;
+  voices: string | null;
+  context: string | null;
   audio_url: string | null;
+  location: { lat: number; lng: number } | null;
 }
 
-/**
- * Статус часов ребёнка
- */
+// Анализ при запросе "что у ребёнка?"
+export interface AnalysisResult {
+  heard: string;
+  voices: string;
+  context: string;
+  alert_level: AlertLevel;
+  summary: string;
+}
+
+// Ответ /ask
+export interface AskResponse {
+  status: "ok";
+  alert_id: string;
+  analysis: AnalysisResult;
+  audio_url: string;
+  timestamp: string;
+}
+
+// Статус часов
 export interface DeviceStatus {
+  device_id: string;
   child_name: string;
-  battery_percent: number; // 0-100
-  signal: "none" | "weak" | "good" | "excellent";
-  signal_type: "2G" | "3G" | "4G" | "5G" | "WiFi";
-  gps_ok: boolean;
-  last_activity: string; // ISO 8601
+  battery: number;
+  signal: string; // "4G" или "weak"
+  signal_strength: number;
+  gps_fix: boolean;
+  location: { lat: number; lng: number } | null;
+  last_seen: string | null;
+  online: boolean;
 }

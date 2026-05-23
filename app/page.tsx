@@ -1,46 +1,57 @@
 "use client";
 
-import { PushToggle } from "@/components/PushToggle";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AskButton } from "@/components/AskButton";
 import { AnalysisCard } from "@/components/AnalysisCard";
 import { DeviceStatus } from "@/components/DeviceStatus";
 import { AlertsList } from "@/components/AlertsList";
 import { AlertDetailDialog } from "@/components/AlertDetailDialog";
+import { PushToggle } from "@/components/PushToggle";
 import { useAsk } from "@/hooks/useAsk";
 import { useDeviceStatus } from "@/hooks/useDeviceStatus";
 import { useAlerts } from "@/hooks/useAlerts";
 import type { Alert } from "@/lib/types";
 
 export default function Home() {
-  const { data: analysis, loading: askLoading, error: askError, ask } = useAsk();
+  const { data: analysis, audioUrl, loading: askLoading, error: askError, ask } = useAsk();
   const { status, loading: statusLoading } = useDeviceStatus();
   const { alerts, loading: alertsLoading, refresh } = useAlerts();
 
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+
+  // Открываем модалку, если пришли по ссылке из push (?alert=evt_xxx)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const alertId = params.get("alert");
+    if (alertId && alerts.length > 0) {
+      const found = alerts.find((a) => a.alert_id === alertId);
+      if (found) setSelectedAlert(found);
+    }
+  }, [alerts]);
 
   const childName = status?.child_name ?? "Ребёнок";
 
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-md mx-auto px-4 py-6 space-y-8">
-        {/* Секция 1: Что у ребёнка? */}
         <section>
           <h1 className="text-2xl font-bold mb-2">Что у ребёнка?</h1>
-          <AskButton
-            childName={childName}
-            loading={askLoading}
-            onClick={ask}
-          />
+          <AskButton childName={childName} loading={askLoading} onClick={ask} />
           {askError && (
             <div className="text-sm text-red-600 text-center mt-2">
               {askError}
             </div>
           )}
-          {analysis && <AnalysisCard analysis={analysis} onRefresh={ask} />}
+          {analysis && (
+            <AnalysisCard
+              analysis={analysis}
+              audioUrl={audioUrl}
+              onRefresh={ask}
+            />
+          )}
         </section>
 
-        {/* Секция 2: Лента тревог */}
         <section>
           <h2 className="text-lg font-semibold mb-3">Последние события</h2>
           <AlertsList
@@ -51,8 +62,6 @@ export default function Home() {
           />
         </section>
 
-        {/* Секция 3: Статус часов */}
-        {/* Секция 3: Статус часов */}
         <section>
           <h2 className="text-lg font-semibold mb-3">Часы ребёнка</h2>
           <div className="space-y-3">
@@ -62,7 +71,6 @@ export default function Home() {
         </section>
       </div>
 
-      {/* Модалка деталей — рендерится поверх */}
       <AlertDetailDialog
         alert={selectedAlert}
         onClose={() => setSelectedAlert(null)}

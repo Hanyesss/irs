@@ -55,7 +55,7 @@ export function AlertsList({ alerts, loading, onAlertClick, onRefresh }: Props) 
       </div>
       {safeAlerts.map((alert) => (
         <AlertCard
-          key={alert.id}
+          key={alert.alert_id}
           alert={alert}
           onClick={() => onAlertClick(alert)}
         />

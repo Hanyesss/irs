@@ -7,8 +7,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { Alert } from "@/lib/types";
-import { ANXIETY_STYLES, SOURCE_ICONS } from "@/lib/anxiety";
+import { ANXIETY_STYLES, getSourceIcon } from "@/lib/anxiety";
 import { formatRelativeTime } from "@/lib/format";
+import { useMounted } from "@/hooks/useMounted";
+import { getAudioUrl } from "@/lib/api";
 import { MapPin, Phone, Play } from "lucide-react";
 
 interface Props {
@@ -17,7 +19,7 @@ interface Props {
 }
 
 export function AlertDetailDialog({ alert, onClose }: Props) {
-  // Если alert null — диалог закрыт
+  const mounted = useMounted();
   const open = alert !== null;
 
   return (
@@ -30,27 +32,36 @@ export function AlertDetailDialog({ alert, onClose }: Props) {
         {alert && (
           <div className="space-y-4 mt-2">
             <div className="text-sm text-muted-foreground">
-              {formatRelativeTime(alert.timestamp)}
+              {mounted ? formatRelativeTime(alert.timestamp) : ""}
             </div>
 
-            <div
-              className={`
-                flex items-center gap-2 rounded-lg px-3 py-2
-                ${ANXIETY_STYLES[alert.anxiety_level].bg}
-                ${ANXIETY_STYLES[alert.anxiety_level].text}
-              `}
-            >
-              <span>{SOURCE_ICONS[alert.source]}</span>
+            <div className={`flex items-center gap-2 rounded-lg px-3 py-2 ${ANXIETY_STYLES[alert.alert_level].bg} ${ANXIETY_STYLES[alert.alert_level].text}`}>
+              <span>{getSourceIcon(alert.type)}</span>
               <span className="font-semibold">
-                Тревожность: {alert.anxiety_level}/5
+                Уровень: {alert.alert_level}/5
               </span>
             </div>
 
-            <div>
-              <div className="text-xs font-medium text-muted-foreground mb-1">
-                Анализ AI
+            <div className="space-y-2 text-sm">
+              {alert.heard && (
+                <div>
+                  <span className="font-medium">Слышно:</span> {alert.heard}
+                </div>
+              )}
+              {alert.voices && (
+                <div>
+                  <span className="font-medium">Голоса:</span> {alert.voices}
+                </div>
+              )}
+              {alert.context && (
+                <div>
+                  <span className="font-medium">Контекст:</span> {alert.context}
+                </div>
+              )}
+              <div className="pt-2 border-t">
+                <span className="font-medium">Анализ AI:</span>
+                <p className="leading-relaxed mt-1">{alert.summary}</p>
               </div>
-              <p className="text-sm leading-relaxed">{alert.ai_analysis}</p>
             </div>
 
             {alert.location && (
@@ -60,16 +71,18 @@ export function AlertDetailDialog({ alert, onClose }: Props) {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="w-4 h-4 text-red-500" />
-                  <span>{alert.location.address}</span>
+                  <a href={`https://www.google.com/maps?q=${alert.location.lat},${alert.location.lng}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                    Открыть на карте
+                  </a>
                 </div>
               </div>
             )}
 
             {alert.audio_url && (
-              <button className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600">
+              <a href={getAudioUrl(alert.audio_url)} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600">
                 <Play className="w-4 h-4" />
-                Послушать запись 30 сек
-              </button>
+                Послушать запись
+              </a>
             )}
 
             <div className="flex gap-2 pt-2">
